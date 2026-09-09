@@ -33,7 +33,7 @@ jobs:
           mkdir -p dist
           tar -czf dist/aranet4-go-${VERSION}-linux-amd64.tar.gz -C build aranet4-go-linux-amd64
           tar -czf dist/aranet4-go-${VERSION}-linux-arm64.tar.gz -C build aranet4-go-linux-arm64
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-linux
           path: dist/
@@ -56,7 +56,7 @@ jobs:
           mkdir -p dist
           tar -czf dist/aranet4-go-${VERSION}-darwin-amd64.tar.gz -C build aranet4-go-darwin-amd64
           tar -czf dist/aranet4-go-${VERSION}-darwin-arm64.tar.gz -C build aranet4-go-darwin-arm64
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-macos
           path: dist/
@@ -68,7 +68,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: dist/
