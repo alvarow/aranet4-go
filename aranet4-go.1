@@ -1,0 +1,216 @@
+.TH ARANET4\-GO 1 "2026-09-09" "aranet4-go" "User Commands"
+.SH NAME
+aranet4\-go \- read CO2 and environmental data from an Aranet4 sensor via Bluetooth
+.SH SYNOPSIS
+.B aranet4\-go
+.B \-mac
+.I ADDRESS
+.RB [ \-json ]
+.RB [ \-debug ]
+.RB [ \-m ]
+.br
+.B aranet4\-go
+.RB [ \-v ]
+.RB [ \-h ]
+.SH DESCRIPTION
+.B aranet4\-go
+connects to an Aranet4 CO2 sensor over Bluetooth Low Energy (BLE) and
+prints the current CO2, temperature, humidity, pressure, battery level,
+and air quality status.
+.PP
+The sensor must have
+.B Smart Home Integration
+enabled in the Aranet4 mobile app (firmware v1.2.0 or newer required).
+No pairing or cloud connection is needed.
+.SH OPTIONS
+.TP
+.BI \-mac " ADDRESS"
+Bluetooth MAC address of the Aranet4 sensor (e.g.\&
+.IR FC:5C:65:B7:84:94 ).
+Dashes are accepted in place of colons.
+Required unless the binary was built with a hardcoded default address.
+.TP
+.B \-json
+Print output as a JSON object instead of human-readable text.
+.TP
+.B \-debug
+Print verbose diagnostic output to stderr: BLE scan progress, discovered
+services and characteristics, and connection state.
+.TP
+.B \-m
+Disable ANSI color coding.
+Useful when piping output to a file or a tool that does not interpret
+escape codes.
+.TP
+.BR \-v ", " \-version
+Print the version, git commit, and build timestamp, then exit.
+.TP
+.BR \-h ", " \-help
+Print usage information and exit.
+.SH OUTPUT
+.SS Human-readable (default)
+.nf
+CO2:         940 ppm
+Temperature: 22.9 \[de]C
+Humidity:    30 %
+Pressure:    1013.7 hPa
+Battery:     94 %
+Status:      GREEN
+Interval:    300 s
+Age:         4m 23s
+.fi
+.PP
+.B Interval
+is the measurement period configured on the device.
+.B Age
+is the time elapsed since the last measurement was taken.
+Values are color-coded green, yellow, or red according to the thresholds
+described in
+.B COLOR CODING
+below.
+Use
+.B \-m
+to disable colors.
+.SS JSON
+.nf
+{
+  "co2": 940,
+  "temperature": 22.9,
+  "pressure": 1013.7,
+  "humidity": 30,
+  "battery": 94,
+  "status": "GREEN",
+  "status_code": 1,
+  "interval": 300,
+  "ago": 263
+}
+.fi
+.PP
+.B ago
+is in seconds.
+.B status_code
+is 1\~(GREEN), 2\~(YELLOW), or 3\~(RED) as reported by the device.
+.SH COLOR CODING
+.SS CO2 (ppm)
+.TP
+GREEN
+< 1000 \(em good air quality
+.TP
+YELLOW
+1000\(en1400 \(em consider ventilation
+.TP
+RED
+> 1400 \(em ventilation needed
+.SS Temperature (\[de]C)
+.TP
+GREEN
+18\(en24
+.TP
+YELLOW
+15\(en18 or 24\(en27
+.TP
+RED
+< 15 or > 27
+.SS Humidity (%)
+.TP
+GREEN
+30\(en45
+.TP
+YELLOW
+46\(en70
+.TP
+RED
+< 30 or > 70
+.SS Pressure (hPa)
+.TP
+GREEN
+993\(en1033
+.TP
+YELLOW
+980\(en992 or 1034\(en1050
+.TP
+RED
+< 980 or > 1050
+.SS Battery (%)
+.TP
+GREEN
+> 30
+.TP
+YELLOW
+15\(en30
+.TP
+RED
+< 15
+.PP
+The overall
+.B Status
+field reflects the worst of the CO2 and humidity readings.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Error: missing required flag, invalid MAC address, device not found,
+BLE read failure, or invalid data received.
+.SH EXAMPLES
+Read from a specific device:
+.PP
+.RS
+.nf
+aranet4\-go \-mac FC:5C:65:B7:84:94
+.fi
+.RE
+.PP
+Emit JSON for scripting:
+.PP
+.RS
+.nf
+aranet4\-go \-mac FC:5C:65:B7:84:94 \-json | jq .co2
+.fi
+.RE
+.PP
+Log every five minutes via cron:
+.PP
+.RS
+.nf
+*/5 * * * * aranet4\-go \-mac FC:5C:65:B7:84:94 \-json >> /var/log/aranet4.log
+.fi
+.RE
+.PP
+Disable colors when piping:
+.PP
+.RS
+.nf
+aranet4\-go \-mac FC:5C:65:B7:84:94 \-m | tee readings.txt
+.fi
+.RE
+.SH FILES
+.TP
+.I DEFAULT\-MAC\-ADDR
+If this file exists in the build directory, its contents are baked into
+the binary as the default MAC address at compile time.
+.SH NOTES
+.SS Linux Bluetooth permissions
+Raw Bluetooth access requires elevated privileges.
+The recommended approach is to grant the binary the necessary capabilities
+once after installation:
+.PP
+.RS
+.nf
+sudo setcap 'cap_net_raw,cap_net_admin=eip' /usr/local/bin/aranet4\-go
+.fi
+.RE
+.PP
+Alternatively, run with
+.BR sudo (8)
+or add your user to the
+.B bluetooth
+group.
+.SH SEE ALSO
+.BR bluetoothctl (1),
+.BR hcitool (1),
+.BR jq (1)
+.PP
+Aranet4 Python library:
+.I https://github.com/Anrijs/Aranet4-Python

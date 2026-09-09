@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go test ./...
+
+  build-linux:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          make build-linux build-linux-arm64 VERSION=$VERSION
+      - name: Package
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          mkdir -p dist
+          tar -czf dist/aranet4-go-${VERSION}-linux-amd64.tar.gz -C build aranet4-go-linux-amd64
+          tar -czf dist/aranet4-go-${VERSION}-linux-arm64.tar.gz -C build aranet4-go-linux-arm64
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist-linux
+          path: dist/
+
+  build-macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          make build-darwin build-darwin-arm64 CGO_ENABLED=1 VERSION=$VERSION
+      - name: Package
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          mkdir -p dist
+          tar -czf dist/aranet4-go-${VERSION}-darwin-amd64.tar.gz -C build aranet4-go-darwin-amd64
+          tar -czf dist/aranet4-go-${VERSION}-darwin-arm64.tar.gz -C build aranet4-go-darwin-arm64
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist-macos
+          path: dist/
+
+  release:
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          merge-multiple: true
+          path: dist/
+      - name: Generate checksums
+        run: cd dist && sha256sum * > checksums.txt
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes \
+            dist/*

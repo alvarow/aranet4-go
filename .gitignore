@@ -1,0 +1,21 @@
+# Binaries
+aranet4-go
+aranet4-go-*
+*.exe
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+DEFAULT-MAC-ADDR
