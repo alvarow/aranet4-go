@@ -14,6 +14,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-ble/ble"
 	"github.com/go-ble/ble/examples/lib/dev"
+
+	"aranet4-go/config"
 )
 
 const (
@@ -49,7 +51,18 @@ type Aranet4Data struct {
 }
 
 func main() {
-	macAddr := flag.String("mac", DefaultMAC, "Aranet4 MAC address")
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not load config: %v\n", err)
+		cfg = config.Default()
+	}
+
+	defaultMAC := DefaultMAC
+	if cfg.MAC != "" {
+		defaultMAC = cfg.MAC
+	}
+
+	macAddr := flag.String("mac", defaultMAC, "Aranet4 MAC address")
 	jsonOutput := flag.Bool("json", false, "Output in JSON format")
 	debug := flag.Bool("debug", false, "Enable debug output")
 	monochrome := flag.Bool("m", false, "Disable colors (monochrome output)")
@@ -68,11 +81,11 @@ func main() {
 		fmt.Printf("Aranet4 Go Reader v%s\n", Version)
 		fmt.Printf("Build Time: %s\n", BuildTime)
 		fmt.Printf("Git Commit: %s\n", GitCommit)
-		if DefaultMAC != "" {
-			fmt.Printf("Usage: aranet4-go [-mac %s] [-json] [-debug] [-m]\n", DefaultMAC)
+		fmt.Printf("Config:     %s\n", config.Path())
+		if defaultMAC != "" {
+			fmt.Printf("Usage: aranet4-go [-mac %s] [-json] [-debug] [-m]\n", defaultMAC)
 		} else {
 			fmt.Println("Usage: aranet4-go -mac <MAC_ADDRESS> [-json] [-debug] [-m]")
-			fmt.Println("Note: Build with DEFAULT-MAC-ADDR file to set a default MAC address")
 		}
 		flag.PrintDefaults()
 		if *macAddr == "" {
@@ -95,7 +108,7 @@ func main() {
 	if *jsonOutput {
 		outputJSON(data)
 	} else {
-		outputHuman(data, *macAddr, *debug, !*monochrome)
+		outputHuman(data, *macAddr, *debug, cfg.Color && !*monochrome)
 	}
 }
 

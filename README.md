@@ -71,6 +71,20 @@ You can find your device's MAC address using:
 
 The MAC address format is: `XX:XX:XX:XX:XX:XX` (e.g., `FC:5C:65:B7:84:94`)
 
+## Configuration
+
+`aranet4-go` reads `~/.config/aranet4-go/config.toml` on startup.
+CLI flags always override config values.
+
+```toml
+mac   = "FC:5C:65:B7:84:94"
+color = true
+```
+
+With a `mac` set in the config, the `-mac` flag becomes optional.
+
+---
+
 ## Usage
 
 ### Basic Reading

@@ -2,7 +2,7 @@
 
 # Project info
 BINARY_NAME=aranet4-go
-VERSION?=1.0.0
+VERSION?=1.1.0
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 DEFAULT_MAC=$(shell test -f DEFAULT-MAC-ADDR && cat DEFAULT-MAC-ADDR | tr -d '\n' || echo "")

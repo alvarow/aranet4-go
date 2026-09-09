@@ -187,9 +187,24 @@ aranet4\-go \-mac FC:5C:65:B7:84:94 \-m | tee readings.txt
 .RE
 .SH FILES
 .TP
+.I ~/.config/aranet4\-go/config.toml
+Optional configuration file.
+If present, values here serve as defaults that CLI flags can override.
+Example:
+.PP
+.RS
+.nf
+mac   = "FC:5C:65:B7:84:94"
+color = true
+.fi
+.RE
+.TP
 .I DEFAULT\-MAC\-ADDR
 If this file exists in the build directory, its contents are baked into
 the binary as the default MAC address at compile time.
+A MAC address set in
+.I config.toml
+takes precedence over this build-time default.
 .SH NOTES
 .SS Linux Bluetooth permissions
 Raw Bluetooth access requires elevated privileges.
